@@ -1,20 +1,28 @@
 #coding=utf-8
 
-import  scrapy
+import scrapy
 import json
 from ..items import FEFoodItem
 from ..items import FEPlatform
 from ..items import FERestaurantItem
+import pymysql
+
 
 class FoodSpider(scrapy.Spider):
     name="eleme"
-
+    pageLimit = 24
+    pageStart = 0
+    start_url = '''https://www.ele.me/restapi/shopping/restaurants?extras[]=activities&geohash=ww0y02qh73v&latitude=34.8068
+        &limit=%d&longitude=113.57406&offset=%d&restaurant_category_ids[]=-100&sign=1511773470908&terminal=web'''
     def start_requests(self):
         #饿了么数据
         #所有店家
         #urls = ['https://www.ele.me/restapi/shopping/restaurants?extras%5B%5D=activities&geohash=ww0y02qh73v&latitude=34.8068&limit=24&longitude=113.57406&offset=24&terminal=web']
         #所有美食外卖店家
-        urls=['https://www.ele.me/restapi/shopping/restaurants?extras%5B%5D=activities&geohash=ww0y02qh73v&latitude=34.8068&limit=24&longitude=113.57406&offset=0&restaurant_category_ids%5B%5D=-100&sign=1511773470908&terminal=web']
+
+
+
+        url = (self.start_url % (self.pageLimit,self.pageStart))
         #德克士产品
         #urls=['https://www.ele.me/restapi/shopping/v2/menu?restaurant_id=156050583']
 
@@ -33,8 +41,7 @@ class FoodSpider(scrapy.Spider):
 
         #yield scrapy.Request(url=url,method="POST",cookies=formdata,callback=self.parse)
 
-        for url in urls:
-            yield scrapy.Request(url=url,callback=self.parse)
+        yield scrapy.Request(url=url,callback=self.parse)
 
     def processItem(item):
         return item
@@ -42,17 +49,29 @@ class FoodSpider(scrapy.Spider):
 
     def parse(self, response):
         sites = json.loads(response.body_as_unicode())
-        for site in sites:
-            restaurantItem = FERestaurantItem()
-            restaurantItem['restaurant_name'] = site['name']
-            restaurantItem['address'] = site['address']
-            restaurantItem['open_time'] = site['opening_hours'][0]
-            restaurantItem['description'] = site['description']
-            restaurantItem['deliver_fee'] = site['float_delivery_fee']
-            restaurantItem['deliver_min_money'] = site['float_minimum_order_amount']
-            restaurantItem['platform_id'] = 2       #当前只有饿了么
-            yield restaurantItem
+        if sites:
+            #如果查询结果有数据,则更新分页数据
+            #self.pageStart = self.pageStart + self.pageLimit
+            #插入查询地点记录
 
+
+            #插入饭店信息
+            for site in sites:
+                restaurantItem = FERestaurantItem()
+                restaurantItem['restaurant_name'] = site['name']
+                restaurantItem['address'] = site['address']
+                restaurantItem['open_time'] = site['opening_hours'][0]
+                restaurantItem['description'] = site['description']
+                restaurantItem['deliver_fee'] = site['float_delivery_fee']
+                restaurantItem['deliver_min_money'] = site['float_minimum_order_amount']
+                # restaurantItem['latitude'] = site['latitude']
+                # restaurantItem['longitude'] = site['longitude']
+                restaurantItem['platform_id'] = 2       #当前只有饿了么
+                yield restaurantItem
+            #next_url = (self.start_url % (self.pageLimit, self.pageStart))
+            #yield scrapy.Request(next_url, callback=self.parse)
+        else:
+            print("没有数据，当前最大分页值 %d" % (self.pageStart))
 
 
         # page = response.url.split("/")[-2]
