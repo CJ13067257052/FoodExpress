@@ -18,9 +18,19 @@ class FERestaurantItem(scrapy.Item):
     deliver_fee = scrapy.Field()             #送餐费用
     deliver_min_money = scrapy.Field()        #最少起送餐费
     platform_id = scrapy.Field()             #平台ID
-    # latitude = scrapy.Field()                #经度
-    # longitude = scrapy.Field()               #纬度
+    latitude = scrapy.Field()                #经度
+    longitude = scrapy.Field()               #纬度
+    search_place_id = scrapy.Field()         #搜索
 
+    def get_insert_sql(self):
+        insert_sql = """insert into fe_restaurant(restaurant_name,description,address,deliver_fee,deliver_min_money,platform_id,latitude,longitude)
+         value ('%s','%s','%s','%f','%f','%d','%f','%f')"""
+        params = (self["restaurant_name"], self["address"], self["description"], self["deliver_fee"], self["deliver_min_money"],
+                  self["platform_id"], self["latitude"], self["longitude"])
+
+        return insert_sql, params
+    def sayHello(self):
+        return "hello sky"
 class fe_placeRestaurant(scrapy.Item):
     search_place_id = scrapy.Field()         #查询地点
     restaurant_id = scrapy.Field()           #饭店ID

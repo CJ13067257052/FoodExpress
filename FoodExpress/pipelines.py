@@ -16,6 +16,7 @@ from twisted.enterprise import adbapi
 
 class RestaurantPipeline(object):
     count = 0
+
     def __init__(self,dbpool):
         self.dbpool = dbpool
 
@@ -29,11 +30,24 @@ class RestaurantPipeline(object):
         try:
             # 生成连接池
             #dbpool = adbapi.ConnectionPool('pymysql', dbparms)
-            dbpool = adbapi.ConnectionPool("pymysql", host=settings["MYSQL_HOST"], db=settings["MYSQL_DBNAME"],
-                                           user=settings["MYSQL_USER"], password=settings["MYSQL_PASSWORD"],
-                                           charset="utf8",
-                                           cursorclass=pymysql.cursors.DictCursor,
-                                           use_unicode=True)
+            # dbpool = adbapi.ConnectionPool("pymysql", host=settings["MYSQL_HOST"], db=settings["MYSQL_DBNAME"],
+            #                                user=settings["MYSQL_USER"], password=settings["MYSQL_PASSWORD"],
+            #                                charset="utf8",
+            #                                cursorclass=pymysql.cursors.DictCursor,
+            #                                use_unicode=True)
+
+            # 传入settings参数
+            dbparms = dict(
+                host=settings["MYSQL_HOST"],
+                db=settings["MYSQL_DBNAME"],
+                user=settings["MYSQL_USER"],
+                passwd=settings["MYSQL_PASSWORD"],
+                port=settings["MYSQL_PORT"],
+                charset='utf8',
+                cursorclass=pymysql.cursors.DictCursor,
+                use_unicode=True
+            )
+            dbpool = adbapi.ConnectionPool("pymysql", **dbparms)
             return self(dbpool)
         except Exception as e:
             print(e)
@@ -51,48 +65,45 @@ class RestaurantPipeline(object):
 
         ##同步插入
         # 打开数据库连接
-        #db = pymysql.connect(host="39.106.2.29", user="root",password="67891011sy", db="FoodExpress", port=3306,charset='utf8mb4')
+        # db = pymysql.connect(host="39.106.2.29", user="root",password="67891011sy", db="FoodExpress", port=3306,charset='utf8mb4')
 
-        # 使用cursor()方法获取操作游标
+        #使用cursor()方法获取操作游标
         # cur = db.cursor()
-        # "update user set username = '%s' where id = %d"
-        # sql = ("insert into fe_restaurant(restaurant_name,description,address,deliver_fee,deliver_min_money,platform_id) value ('%s','%s','%s','%f','%f','%d')"
-        #        % (item["restaurant_name"], item["address"],item["description"], item["deliver_fee"], item["deliver_min_money"],item["platform_id"]))
+
+        #sql = ("insert into fe_restaurant(restaurant_name,description,address,deliver_fee,deliver_min_money,platform_id) value ('%s','%s','%s','%f','%f','%d')"
+        #       % (item["restaurant_name"], item["address"],item["description"], item["deliver_fee"], item["deliver_min_money"],item["platform_id"]))
+
         # try:
-        #     cur.execute(sql)  # 执行sql语句
+        #     cur.execute(insert_sql)  # 执行sql语句
         #     db.commit()
         # except Exception as e:
         #     raise e
-
-        if self.count < 5:
-            filename = '%s.txt' % self.count
-            with open(filename,'w') as f :
-                f.write(item['restaurant_name'])
-            self.count += 1
-
 
 
     def do_insert(self,cursor, item):
         # 执行具体的插入语句,不需要commit操作,Twisted会自动进行
         # insert_sql = ("insert into fe_restaurant(restaurant_name,description,address,deliver_fee,deliver_min_money,platform_id,latitude,longitude) value ('%s','%s','%s','%f','%f','%d','%f','%f')"
         #        % (item["restaurant_name"], item["address"],item["description"], item["deliver_fee"],item["deliver_min_money"],item["platform_id"]))
+        a = 1
+        try:
+            insert_sql,params = item.get_insert_sql()
+        except Exception as e:
+            print("插入失败，原因:",e)
+        else:
+            cursor.execute(insert_sql,params)
+            print('成功插入一条数据！')
 
-        insert_sql = ("insert into fe_restaurant(restaurant_name,description,address,deliver_fee,deliver_min_money,platform_id) "
-                      "value ('%s','%s','%s','%f','%f','%d')"
-        % (item["restaurant_name"], item["address"], item["description"], item["deliver_fee"], item["deliver_min_money"],item["platform_id"]))
 
-        print(insert_sql)
-
-        cursor.execute(insert_sql)
-
+        # count = count + 1
         id = cursor.lastrowid
         if id:
             print("刚插入的id %d" % id)
-        insert_sql2 = ("insert into fe_placeRestaurant(search_place_id,restaurant_id,distance) value (%d,%d,%f)" %(1,id,item["distance"]))
+        insert_sql2 = ("insert into fe_placeRestaurant(search_place_id,restaurant_id,distance) value (%d,%d,%f)" %(item['search_place_id'],id,item["distance"]))
 
         cursor.execute(insert_sql2)
 
 
     def handle_error(self, failure):
         #出来异步插入异常
+        print("异步插入数据错误")
         print(failure)

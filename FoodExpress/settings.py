@@ -14,10 +14,11 @@ BOT_NAME = 'FoodExpress'
 SPIDER_MODULES = ['FoodExpress.spiders']
 NEWSPIDER_MODULE = 'FoodExpress.spiders'
 
-MYSQL_HOST = ""
-MYSQL_DBNAME = ""
-MYSQL_USER = ""
-MYSQL_PASSWORD = ""
+MYSQL_HOST = "39.106.2.29"
+MYSQL_DBNAME = "FoodExpress"
+MYSQL_USER = "root"
+MYSQL_PASSWORD = "67891011sy"
+MYSQL_PORT = 3306
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -51,9 +52,9 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    'FoodExpress.middlewares.FoodexpressSpiderMiddleware': 543,
-#}
+# SPIDER_MIDDLEWARES = {
+#    'FoodExpress.middlewares.ElemeSpiderMiddleware': 543,
+# }
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
