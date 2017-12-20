@@ -90,16 +90,14 @@ class RestaurantPipeline(object):
         except Exception as e:
             print("插入失败，原因:",e)
         else:
-            cursor.execute(insert_sql,params)
+            sql = insert_sql % params
+            cursor.execute(sql)
             print('成功插入一条数据！')
 
 
         # count = count + 1
         id = cursor.lastrowid
-        if id:
-            print("刚插入的id %d" % id)
         insert_sql2 = ("insert into fe_placeRestaurant(search_place_id,restaurant_id,distance) value (%d,%d,%f)" %(item['search_place_id'],id,item["distance"]))
-
         cursor.execute(insert_sql2)
 
 

@@ -14,10 +14,10 @@ BOT_NAME = 'FoodExpress'
 SPIDER_MODULES = ['FoodExpress.spiders']
 NEWSPIDER_MODULE = 'FoodExpress.spiders'
 
-MYSQL_HOST = "39.106.2.29"
+MYSQL_HOST = ""
 MYSQL_DBNAME = "FoodExpress"
-MYSQL_USER = "root"
-MYSQL_PASSWORD = "67891011sy"
+MYSQL_USER = ""
+MYSQL_PASSWORD = ""
 MYSQL_PORT = 3306
 
 
@@ -25,7 +25,7 @@ MYSQL_PORT = 3306
 #USER_AGENT = 'FoodExpress (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32

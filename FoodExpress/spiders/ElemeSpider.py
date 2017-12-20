@@ -8,11 +8,24 @@ from ..items import FERestaurantItem
 from ..test import test
 import pymysql
 
-
 class FoodSpider(scrapy.Spider):
-    name="eleme"
+    name = "eleme_food"
+
+    def start_requests(self):
+        # 德克士产品
+        start_url = '''https://www.ele.me/restapi/shopping/v2/menu?restaurant_id=%d'''
+        yield scrapy.Request(url=url, callback=self.parse, dont_filter=True)
+
+    def parse(self, response):
+        dataList = json.loads(response.body_as_unicode())
+
+
+
+class RestaurantSpider(scrapy.Spider):
+    name="eleme_restaurant"
     pageLimit = 24
     pageStart = 0
+    count = 0
     start_url = '''https://www.ele.me/restapi/shopping/restaurants?extras[]=activities&geohash=ww0y02qh73v&latitude=34.8068
         &limit=%d&longitude=113.57406&offset=%d&restaurant_category_ids[]=-100&sign=1511773470908&terminal=web'''
     def start_requests(self):
@@ -53,7 +66,7 @@ class FoodSpider(scrapy.Spider):
         if sites:
             print("有数据")
             #如果查询结果有数据,则更新分页数据
-            #self.pageStart = self.pageStart + self.pageLimit
+            self.pageStart = self.pageStart + self.pageLimit
             #插入查询地点记录
 
             #插入饭店信息
@@ -69,11 +82,14 @@ class FoodSpider(scrapy.Spider):
                 restaurantItem['longitude'] = site['longitude']
                 restaurantItem['platform_id'] = 2       #当前只有饿了么
                 restaurantItem['search_place_id'] = 1       #搜索位置id
+                restaurantItem['distance'] = site['distance']
+                self.count = self.count + 1
                 yield restaurantItem
             next_url = (self.start_url % (self.pageLimit, self.pageStart))
             yield scrapy.Request(next_url, callback=self.parse)
         else:
             print("没有数据，当前最大分页值 %d" % (self.pageStart))
+            print("总共获取到%d" % self.count)
 
 
         # page = response.url.split("/")[-2]
