@@ -4,30 +4,70 @@ import scrapy
 import json
 from ..items import FEFoodItem
 from ..items import FEPlatform
+from ..items import FEFoodCategory
 from ..items import FERestaurantItem
-from ..test import test
-import pymysql
+
+
+from ..util.DBHelper import DBHelper
+
 
 class FoodSpider(scrapy.Spider):
     name = "eleme_food"
 
+    start_url = '''https://www.ele.me/restapi/shopping/v2/menu?restaurant_id=%d'''
+
     def start_requests(self):
         # 德克士产品
-        start_url = '''https://www.ele.me/restapi/shopping/v2/menu?restaurant_id=%d'''
-        yield scrapy.Request(url=url, callback=self.parse, dont_filter=True)
+
+        dbHelper = DBHelper.getDBHelper()
+        resIdList = dbHelper.queryAllRestaurant()
+
+        for row in resIdList:
+            for d, x in row.items():
+                print("饭店ID:%s  " % str(x))
+                url = self.start_url % x
+                yield scrapy.Request(url=url, callback=self.parse, dont_filter=True)
+
+    id = scrapy.Field()
+    name = scrapy.Field()
+    price = scrapy.Field()  # 价钱
+    category_id = scrapy.Field()  # 类别ID
+    platform_category_id = scrapy.Field()  # 平台类别ID
+    category_name = scrapy.Field()  # 平台类别名称
+    description = scrapy.Field()  # 备注
+    month_sales = scrapy.Field()  # 月销售
+    rating_count = scrapy.Field()  # 评论数量
+    rating = scrapy.Field()  # 评价星
+    restaurant_id = scrapy.Field()  # 饭店ID
+    platform_id = scrapy.Field()  # 平台ID
+
 
     def parse(self, response):
         dataList = json.loads(response.body_as_unicode())
+        if dataList:
+            print("有商品数据")
+
+            #添加商品类别
+            for data in dataList:
+                foodCategory = FEFoodCategory()
+                foodCategory['platform_category_id'] = data['type']
+                foodCategory['platform_id'] = 2 #当前只有饿了么
+                foodCategory['category_name'] = data['name']
+                yield foodCategory
 
 
+            for cat in dataList:
+                for food in cat:
+                    foodItem = FEFoodItem()
+                    #foodItem['name']
 
 class RestaurantSpider(scrapy.Spider):
     name="eleme_restaurant"
     pageLimit = 24
     pageStart = 0
     count = 0
-    start_url = '''https://www.ele.me/restapi/shopping/restaurants?extras[]=activities&geohash=ww0y02qh73v&latitude=34.8068
-        &limit=%d&longitude=113.57406&offset=%d&restaurant_category_ids[]=-100&sign=1511773470908&terminal=web'''
+    start_url = '''https://www.ele.me/restapi/shopping/restaurants?extras[]=activities&geohash=ww0y02qh73v&latitude=32.13134
+        &limit=%d&longitude=115.0494&offset=%d&restaurant_category_ids[]=-100&sign=1511773470908&terminal=web'''
     def start_requests(self):
         #饿了么数据
         #所有店家
@@ -62,27 +102,28 @@ class RestaurantSpider(scrapy.Spider):
 
 
     def parse(self, response):
-        sites = json.loads(response.body_as_unicode())
-        if sites:
+        dataList = json.loads(response.body_as_unicode())
+        if dataList:
             print("有数据")
             #如果查询结果有数据,则更新分页数据
             self.pageStart = self.pageStart + self.pageLimit
             #插入查询地点记录
 
             #插入饭店信息
-            for site in sites:
+            for data in dataList:
                 restaurantItem = FERestaurantItem()
-                restaurantItem['restaurant_name'] = site['name']
-                restaurantItem['address'] = site['address']
-                restaurantItem['open_time'] = site['opening_hours'][0]
-                restaurantItem['description'] = site['description']
-                restaurantItem['deliver_fee'] = site['float_delivery_fee']
-                restaurantItem['deliver_min_money'] = site['float_minimum_order_amount']
-                restaurantItem['latitude'] = site['latitude']
-                restaurantItem['longitude'] = site['longitude']
+                restaurantItem['restaurant_name'] = data['name']
+                restaurantItem['address'] = data['address']
+                restaurantItem['open_time'] = data['opening_hours'][0]
+                restaurantItem['description'] = data['description']
+                restaurantItem['deliver_fee'] = data['float_delivery_fee']
+                restaurantItem['deliver_min_money'] = data['float_minimum_order_amount']
+                restaurantItem['latitude'] = data['latitude']
+                restaurantItem['longitude'] = data['longitude']
                 restaurantItem['platform_id'] = 2       #当前只有饿了么
-                restaurantItem['search_place_id'] = 1       #搜索位置id
-                restaurantItem['distance'] = site['distance']
+                restaurantItem['search_place_id'] = 2       #搜索位置id
+                restaurantItem['distance'] = data['distance']
+                restaurantItem['platform_restaurant_id'] = data['id']
                 self.count = self.count + 1
                 yield restaurantItem
             next_url = (self.start_url % (self.pageLimit, self.pageStart))
@@ -91,12 +132,4 @@ class RestaurantSpider(scrapy.Spider):
             print("没有数据，当前最大分页值 %d" % (self.pageStart))
             print("总共获取到%d" % self.count)
 
-
-        # page = response.url.split("/")[-2]
-        #
-        # filename = '%s.txt' % page
-        # a = sites[0]["opening_hours"][0]
-        # with open(filename,'w') as f :
-        #     f.write(a)
-        # self.log("save file %s" % filename)
 
