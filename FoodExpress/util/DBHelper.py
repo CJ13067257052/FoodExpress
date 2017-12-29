@@ -74,9 +74,10 @@ class DBHelper(object):
 
 
 
-    def queryAllRestaurant(self):
+    def queryRestaurantBySearchPlaceId(self,searchPlaceId):
 
-        sql = ("select platform_restaurant_id from fe_restaurant")
+        sql = ("select res.platform_restaurant_id from fe_restaurant as res LEFT JOIN fe_place_restaurant "
+               "as pr on res.id = pr.restaurant_id where pr.search_place_id = %d" % searchPlaceId)
 
         try:
             _conn = self.__dbPool.connection()
@@ -93,6 +94,24 @@ class DBHelper(object):
 
 
     def insert(self,item):
+
+        _conn = self.__dbPool.connection()
+        _cursor = _conn.cursor()
+        insert_sql, params = item.get_insert_sql()
+        sql = insert_sql % params
+        try:
+            _cursor.execute(sql)
+        except Exception as e:
+            _conn.rollback()  # 事务回滚
+            _conn.close()
+            print('事务处理失败', e)
+        else:
+            _conn.commit()  # 事务提交
+            print('事务处理成功', _cursor.rowcount)
+            _cursor.close()
+            _conn.close()
+
+    def insertRestaurant(self,item):
         ### 使用Twisted异步的将Item数据插入数据库  ###
         # query = self.dbpool.runInteraction(self.do_insert, item)
         # 错误处理
@@ -120,16 +139,6 @@ class DBHelper(object):
             print('事务处理成功', _cursor.rowcount)
             _cursor.close()
             _conn.close()
-        # _cursor.execute(sql)
-        # _conn.commit()
-        # id = _cursor.lastrowid
-        # insert_sql2 = ("insert into fe_place_restaurant(search_place_id,restaurant_id,distance) value (%d,%d,%f)" % (
-        #     item['search_place_id'], id, item["distance"]))
-        # _cursor.execute(insert_sql2)
-        # _conn.commit()
-        # _cursor.close()
-        # _conn.close()
-
 
     if 0 :
         def do_insert(self, cursor, item):

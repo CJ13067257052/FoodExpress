@@ -4,7 +4,7 @@ import scrapy
 import json
 from ..items import FEFoodItem
 from ..items import FEPlatform
-from ..items import FEFoodCategory
+from ..items import FEFoodCategoryItem
 from ..items import FERestaurantItem
 
 
@@ -20,26 +20,14 @@ class FoodSpider(scrapy.Spider):
         # 德克士产品
 
         dbHelper = DBHelper.getDBHelper()
-        resIdList = dbHelper.queryAllRestaurant()
+        resIdList = dbHelper.queryRestaurantBySearchPlaceId(2)
+
 
         for row in resIdList:
             for d, x in row.items():
                 print("饭店ID:%s  " % str(x))
                 url = self.start_url % x
                 yield scrapy.Request(url=url, callback=self.parse, dont_filter=True)
-
-    id = scrapy.Field()
-    name = scrapy.Field()
-    price = scrapy.Field()  # 价钱
-    category_id = scrapy.Field()  # 类别ID
-    platform_category_id = scrapy.Field()  # 平台类别ID
-    category_name = scrapy.Field()  # 平台类别名称
-    description = scrapy.Field()  # 备注
-    month_sales = scrapy.Field()  # 月销售
-    rating_count = scrapy.Field()  # 评论数量
-    rating = scrapy.Field()  # 评价星
-    restaurant_id = scrapy.Field()  # 饭店ID
-    platform_id = scrapy.Field()  # 平台ID
 
 
     def parse(self, response):
@@ -48,18 +36,29 @@ class FoodSpider(scrapy.Spider):
             print("有商品数据")
 
             #添加商品类别
-            for data in dataList:
-                foodCategory = FEFoodCategory()
-                foodCategory['platform_category_id'] = data['type']
-                foodCategory['platform_id'] = 2 #当前只有饿了么
-                foodCategory['category_name'] = data['name']
-                yield foodCategory
+            index = 0
 
+            print("请求饭店Url %s" %  response.url)
+            urlArr = response.url.split('=')
+            print("饭店Id: %s" % urlArr[1])
+            restaurant_id = urlArr[1]
+
+            if restaurant_id.isdigit():
+                for data in dataList:
+                    index = index + 1
+                    if index > 0 :
+                        print("获取商品类别")
+                        foodCategory = FEFoodCategoryItem()
+                        foodCategory['platform_category_id'] = data['id']
+                        foodCategory['platform_id'] = 2 #当前只有饿了么
+                        foodCategory['category_name'] = data['name']
+                        foodCategory['restaurant_id'] = int(restaurant_id)
+                        yield foodCategory
 
             for cat in dataList:
                 for food in cat:
                     foodItem = FEFoodItem()
-                    #foodItem['name']
+                    #foodItem['name'] = cat.
 
 class RestaurantSpider(scrapy.Spider):
     name="eleme_restaurant"
