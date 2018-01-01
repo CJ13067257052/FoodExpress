@@ -38,27 +38,37 @@ class FoodSpider(scrapy.Spider):
             #添加商品类别
             index = 0
 
-            print("请求饭店Url %s" %  response.url)
             urlArr = response.url.split('=')
             print("饭店Id: %s" % urlArr[1])
             restaurant_id = urlArr[1]
 
             if restaurant_id.isdigit():
                 for data in dataList:
-                    index = index + 1
-                    if index > 0 :
-                        print("获取商品类别")
+                    if index > 0 :      #-1是eleme的热销种类，跟普通种类的商品有重复
+                        print("添加商品类别")
                         foodCategory = FEFoodCategoryItem()
                         foodCategory['platform_category_id'] = data['id']
                         foodCategory['platform_id'] = 2 #当前只有饿了么
                         foodCategory['category_name'] = data['name']
                         foodCategory['restaurant_id'] = int(restaurant_id)
                         yield foodCategory
-
-            for cat in dataList:
-                for food in cat:
-                    foodItem = FEFoodItem()
-                    #foodItem['name'] = cat.
+                    index = index + 1
+            if 0:
+                for cat in dataList:
+                    for food in cat['foods']:
+                        print("添加类别下的商品信息")
+                        foodItem = FEFoodItem()
+                        foodItem['name'] = food['name']
+                        foodItem['price'] = food['specfoods']['price']
+                        foodItem['platform_category_id'] = food['category_id']
+                        foodItem['category_name'] = cat['name']
+                        foodItem['description'] = food['description']
+                        foodItem['month_sales'] = food['month_sales']
+                        foodItem['rating_count'] = food['rating_count']
+                        foodItem['rating'] = food['rating']
+                        foodItem['restaurant_id'] = restaurant_id
+                        foodItem['platform_id'] = 2
+                        yield foodItem
 
 class RestaurantSpider(scrapy.Spider):
     name="eleme_restaurant"
