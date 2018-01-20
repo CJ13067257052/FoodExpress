@@ -73,8 +73,7 @@ COOKIES_ENABLED = False
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'FoodExpress.pipelines.RestaurantPipeline': 200,
-   'FoodExpress.pipelines.FoodPipeline': 300,
+   'FoodExpress.pipelines.ElemePipeline': 200,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

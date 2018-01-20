@@ -28,10 +28,13 @@ class RestaurantPipeline(object):
             dbHelper.insertRestaurant(item)
 
 
-class FoodPipeline(object):
+class ElemePipeline(object):
     def process_item(self, item, spider):
         # settings = get_project_settings()
         # dbHelper = DBHelper.from_settings(settings)
+        dbHelper = DBHelper.getDBHelper()
         if spider.name == 'eleme_food':
-            dbHelper = DBHelper.getDBHelper()
+            #print('种类名称item name ' % item['category_name'])
             dbHelper.insert(item)
+        if spider.name == 'eleme_restaurant':
+            dbHelper.insertRestaurant(item)

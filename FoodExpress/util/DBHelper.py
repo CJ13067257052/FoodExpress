@@ -99,6 +99,7 @@ class DBHelper(object):
         _cursor = _conn.cursor()
         insert_sql, params = item.get_insert_sql()
         sql = insert_sql % params
+
         try:
             _cursor.execute(sql)
         except Exception as e:

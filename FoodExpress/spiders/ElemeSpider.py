@@ -25,19 +25,19 @@ class FoodSpider(scrapy.Spider):
 
         for row in resIdList:
             for d, x in row.items():
-                print("饭店ID:%s  " % str(x))
+                print("查询的饭店ID:%s  " % str(x))
                 url = self.start_url % x
                 yield scrapy.Request(url=url, callback=self.parse, dont_filter=True)
 
 
     def parse(self, response):
+        name = 'a'
         dataList = json.loads(response.body_as_unicode())
         if dataList:
             print("有商品数据")
 
             #添加商品类别
             index = 0
-
             urlArr = response.url.split('=')
             print("饭店Id: %s" % urlArr[1])
             restaurant_id = urlArr[1]
@@ -53,30 +53,32 @@ class FoodSpider(scrapy.Spider):
                         foodCategory['restaurant_id'] = int(restaurant_id)
                         yield foodCategory
                     index = index + 1
-            if 0:
-                for cat in dataList:
-                    for food in cat['foods']:
-                        print("添加类别下的商品信息")
-                        foodItem = FEFoodItem()
-                        foodItem['name'] = food['name']
-                        foodItem['price'] = food['specfoods']['price']
-                        foodItem['platform_category_id'] = food['category_id']
-                        foodItem['category_name'] = cat['name']
-                        foodItem['description'] = food['description']
-                        foodItem['month_sales'] = food['month_sales']
-                        foodItem['rating_count'] = food['rating_count']
-                        foodItem['rating'] = food['rating']
-                        foodItem['restaurant_id'] = restaurant_id
-                        foodItem['platform_id'] = 2
-                        yield foodItem
+
+            for cat in dataList:
+                for food in cat['foods']:
+                    print("添加类别下的商品信息")
+                    foodItem = FEFoodItem()
+                    foodItem['name'] = food['name']
+                    foodItem['price'] = food['specfoods'][0]['price']
+                    foodItem['platform_category_id'] = food['category_id']
+                    foodItem['category_name'] = cat['name']
+                    foodItem['description'] = food['description']
+                    foodItem['month_sales'] = food['month_sales']
+                    foodItem['rating_count'] = food['rating_count']
+                    foodItem['rating'] = food['rating']
+                    foodItem['restaurant_id'] = int(restaurant_id)
+                    foodItem['platform_id'] = 2
+                    yield foodItem
 
 class RestaurantSpider(scrapy.Spider):
     name="eleme_restaurant"
     pageLimit = 24
     pageStart = 0
     count = 0
-    start_url = '''https://www.ele.me/restapi/shopping/restaurants?extras[]=activities&geohash=ww0y02qh73v&latitude=32.13134
-        &limit=%d&longitude=115.0494&offset=%d&restaurant_category_ids[]=-100&sign=1511773470908&terminal=web'''
+    latitude = 32.13757
+    longitude = 115.0502
+    start_url = '''https://www.ele.me/restapi/shopping/restaurants?extras[]=activities&geohash=ww0y02qh73v&latitude=%f
+        &limit=%d&longitude=%f&offset=%d&restaurant_category_ids[]=-100&sign=1511773470908&terminal=web'''
     def start_requests(self):
         #饿了么数据
         #所有店家
@@ -85,7 +87,7 @@ class RestaurantSpider(scrapy.Spider):
 
 
 
-        url = (self.start_url % (self.pageLimit,self.pageStart))
+        url = (self.start_url % (self.latitude,self.pageLimit,self.longitude,self.pageStart))
         #德克士产品
         #urls=['https://www.ele.me/restapi/shopping/v2/menu?restaurant_id=156050583']
 

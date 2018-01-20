@@ -46,6 +46,7 @@ class FEFoodCategoryItem(scrapy.Item):
     restaurant_id = scrapy.Field()
 
     def get_insert_sql(self):
+
         insert_sql = """insert into fe_food_category(platform_category_id,platform_id,category_name,restaurant_id)
          value ('%d','%d','%s','%d')"""
         params = (self["platform_category_id"],  self["platform_id"],self["category_name"],self["restaurant_id"])
