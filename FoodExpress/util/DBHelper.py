@@ -2,6 +2,11 @@
 from ..items import FEFoodItem
 from ..items import FERestaurantItem
 from ..items import FEPlatform
+from ..items import FEOrderFood
+from ..items import FERestaurantOrder
+
+
+
 import pymysql
 from scrapy.utils.project import get_project_settings
 
@@ -102,6 +107,31 @@ class DBHelper(object):
 
         try:
             _cursor.execute(sql)
+        except Exception as e:
+            _conn.rollback()  # 事务回滚
+            _conn.close()
+            print('事务处理失败', e)
+        else:
+            _conn.commit()  # 事务提交
+            print('事务处理成功', _cursor.rowcount)
+            _cursor.close()
+            _conn.close()
+
+
+    def insertOrder(self,item):
+        _conn = self.__dbPool.connection()
+        _cursor = _conn.cursor()
+        insert_sql, params = item.get_insert_sql()
+        sql = insert_sql % params
+        try:
+
+            _cursor.execute(sql)
+            id = _cursor.lastrowid
+            F
+            insert_sql2 = (
+            "insert into fe_place_restaurant(search_place_id,restaurant_id,distance) value (%d,%d,%f)" % (
+                item['search_place_id'], id, item["distance"]))
+            _cursor.execute(insert_sql2)
         except Exception as e:
             _conn.rollback()  # 事务回滚
             _conn.close()

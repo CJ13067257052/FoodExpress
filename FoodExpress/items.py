@@ -30,8 +30,9 @@ class FERestaurantItem(scrapy.Item):
         params = (self["restaurant_name"],  self["description"],self["address"], self["deliver_fee"], self["deliver_min_money"],
                   self["platform_id"],self["platform_restaurant_id"], self["latitude"], self["longitude"])
         return insert_sql, params
-    def sayHello(self):
-        return "hello sky"
+
+
+
 class FEPlaceRestaurant(scrapy.Item):
     search_place_id = scrapy.Field()         #查询地点
     restaurant_id = scrapy.Field()           #饭店ID
@@ -57,6 +58,7 @@ class FEFoodItem(scrapy.Item):
     name = scrapy.Field()
     price = scrapy.Field()                  #价钱
     platform_category_id = scrapy.Field()   #平台类别ID
+    platform_food_id = scrapy.Field()
     category_name = scrapy.Field()          #平台类别名称
     description = scrapy.Field()            #备注
     month_sales = scrapy.Field()            #月销售
@@ -66,12 +68,36 @@ class FEFoodItem(scrapy.Item):
     platform_id = scrapy.Field()            #平台ID
 
     def get_insert_sql(self):
-        insert_sql = """insert into fe_food(name,price,platform_category_id,description,month_sales,rating_count,rating,restaurant_id,platform_id)
-         value ('%s','%f','%d','%s','%d','%d','%f','%d','%d')"""
-        params = (self["name"],  self["price"],self["platform_category_id"], self["description"], self["month_sales"],
+        insert_sql = """insert into fe_food(name,price,platform_category_id,platform_food_id,description,month_sales,rating_count,rating,restaurant_id,platform_id)
+         value ('%s','%f','%d','%d','%s','%d','%d','%f','%d','%d')"""
+        params = (self["name"],  self["price"],self["platform_category_id"], self["platform_food_id"],self["description"], self["month_sales"],
                   self["rating_count"],self["rating"], self["restaurant_id"], self["platform_id"])
         return insert_sql, params
 
+class FERestaurantOrder(scrapy.Item):
+    id = scrapy.Field()
+    restaurant_id = scrapy.Field()                  #饭店ID
+    order_time = scrapy.Field()                     #评价时间，饿了么这里是用评价接口获取的订单信息，将评价时间作为订单时间
+    rating = scrapy.Field()                         #评价星数
+    time_spent = scrapy.Field()                     #订单送达花费时间
+
+    def get_insert_sql(self):
+        insert_sql = """insert into fe_restaurant_order(restaurant_id,order_time,rating,time_spent)
+         value ('%d','%s','%d','%d')"""
+        params = (self["restaurant_id"],  self["order_time"],self["rating"], self["time_spent"])
+        return insert_sql, params
+
+class FEOrderFood(scrapy.Item):
+    id = scrapy.Field()
+    food_id = scrapy.Field()                  #商品ID
+    order_id = scrapy.Field()                     #订单ID
+
+
+    def get_insert_sql(self):
+        insert_sql = """insert into fe_order_food(food_id,order_id)
+         value ('%d','%d')"""
+        params = (self["food_id"],  self["order_id"])
+        return insert_sql, params
 
 
 class FEPlatform(scrapy.Item):

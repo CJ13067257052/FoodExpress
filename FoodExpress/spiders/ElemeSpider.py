@@ -61,6 +61,7 @@ class FoodSpider(scrapy.Spider):
                     foodItem['name'] = food['name']
                     foodItem['price'] = food['specfoods'][0]['price']
                     foodItem['platform_category_id'] = food['category_id']
+                    foodItem['platform_food_id'] = food['specfoods'][0]['food_id']
                     foodItem['category_name'] = cat['name']
                     foodItem['description'] = food['description']
                     foodItem['month_sales'] = food['month_sales']
