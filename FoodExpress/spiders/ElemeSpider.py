@@ -6,7 +6,7 @@ from ..items import FEFoodItem
 from ..items import FEPlatform
 from ..items import FEFoodCategoryItem
 from ..items import FERestaurantItem
-
+from ..items import TestItem
 
 from ..util.DBHelper import DBHelper
 
@@ -19,57 +19,71 @@ class FoodSpider(scrapy.Spider):
     def start_requests(self):
         # 德克士产品
 
-        dbHelper = DBHelper.getDBHelper()
-        resIdList = dbHelper.queryRestaurantBySearchPlaceId(2)
 
 
-        for row in resIdList:
-            for d, x in row.items():
-                print("查询的饭店ID:%s  " % str(x))
-                url = self.start_url % x
-                yield scrapy.Request(url=url, callback=self.parse, dont_filter=True)
+
+        url = "http://www.baidu.com"
+        yield scrapy.Request(url=url, callback=self.parse, dont_filter=True)
+
+        if 0:
+            dbHelper = DBHelper.getDBHelper()
+            resIdList = dbHelper.queryRestaurantBySearchPlaceId(2)
+
+            for row in resIdList:
+                for d, x in row.items():
+                    print("查询的饭店ID:%s  " % str(x))
+                    url = self.start_url % x
+                    yield scrapy.Request(url=url, callback=self.parse, dont_filter=True)
 
 
     def parse(self, response):
-        name = 'a'
-        dataList = json.loads(response.body_as_unicode())
-        if dataList:
-            print("有商品数据")
+        t = TestItem()
+        t['a'] = 1
+        t.b.append(1)
+        t.b.append(2)
+        t.b.append(3)
 
-            #添加商品类别
-            index = 0
-            urlArr = response.url.split('=')
-            print("饭店Id: %s" % urlArr[1])
-            restaurant_id = urlArr[1]
+        yield t
 
-            if restaurant_id.isdigit():
-                for data in dataList:
-                    if index > 0 :      #-1是eleme的热销种类，跟普通种类的商品有重复
-                        print("添加商品类别")
-                        foodCategory = FEFoodCategoryItem()
-                        foodCategory['platform_category_id'] = data['id']
-                        foodCategory['platform_id'] = 2 #当前只有饿了么
-                        foodCategory['category_name'] = data['name']
-                        foodCategory['restaurant_id'] = int(restaurant_id)
-                        yield foodCategory
-                    index = index + 1
+        if 0:
+            dataList = json.loads(response.body_as_unicode())
+            if dataList:
+                print("有商品数据")
 
-            for cat in dataList:
-                for food in cat['foods']:
-                    print("添加类别下的商品信息")
-                    foodItem = FEFoodItem()
-                    foodItem['name'] = food['name']
-                    foodItem['price'] = food['specfoods'][0]['price']
-                    foodItem['platform_category_id'] = food['category_id']
-                    foodItem['platform_food_id'] = food['specfoods'][0]['food_id']
-                    foodItem['category_name'] = cat['name']
-                    foodItem['description'] = food['description']
-                    foodItem['month_sales'] = food['month_sales']
-                    foodItem['rating_count'] = food['rating_count']
-                    foodItem['rating'] = food['rating']
-                    foodItem['restaurant_id'] = int(restaurant_id)
-                    foodItem['platform_id'] = 2
-                    yield foodItem
+                #添加商品类别
+                index = 0
+                urlArr = response.url.split('=')
+                print("饭店Id: %s" % urlArr[1])
+                restaurant_id = urlArr[1]
+
+                if restaurant_id.isdigit():
+                    for data in dataList:
+                        if index > 0 :      #-1是eleme的热销种类，跟普通种类的商品有重复
+                            print("添加商品类别")
+                            foodCategory = FEFoodCategoryItem()
+                            foodCategory['platform_category_id'] = data['id']
+                            foodCategory['platform_id'] = 2 #当前只有饿了么
+                            foodCategory['category_name'] = data['name']
+                            foodCategory['restaurant_id'] = int(restaurant_id)
+                            yield foodCategory
+                        index = index + 1
+
+                for cat in dataList:
+                    for food in cat['foods']:
+                        print("添加类别下的商品信息")
+                        foodItem = FEFoodItem()
+                        foodItem['name'] = food['name']
+                        foodItem['price'] = food['specfoods'][0]['price']
+                        foodItem['platform_category_id'] = food['category_id']
+                        foodItem['platform_food_id'] = food['specfoods'][0]['food_id']
+                        foodItem['category_name'] = cat['name']
+                        foodItem['description'] = food['description']
+                        foodItem['month_sales'] = food['month_sales']
+                        foodItem['rating_count'] = food['rating_count']
+                        foodItem['rating'] = food['rating']
+                        foodItem['restaurant_id'] = int(restaurant_id)
+                        foodItem['platform_id'] = 2
+                        yield foodItem
 
 class RestaurantSpider(scrapy.Spider):
     name="eleme_restaurant"

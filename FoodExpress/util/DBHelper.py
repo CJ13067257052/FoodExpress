@@ -99,23 +99,35 @@ class DBHelper(object):
 
 
     def insert(self,item):
-
-        _conn = self.__dbPool.connection()
-        _cursor = _conn.cursor()
         insert_sql, params = item.get_insert_sql()
         sql = insert_sql % params
+        orderid = 1
+        print('订单信息插入SQL %s' % sql)
+        #for key, value in item.b.items():
+        for value in item.b:
+            insert_Child_sql = item.get_insertChild_sql()
+            params = (orderid,value)
+            sql1 = (insert_Child_sql % params)
+            print('订单商品信息插入SQL %s' % sql1)
 
-        try:
-            _cursor.execute(sql)
-        except Exception as e:
-            _conn.rollback()  # 事务回滚
-            _conn.close()
-            print('事务处理失败', e)
-        else:
-            _conn.commit()  # 事务提交
-            print('事务处理成功', _cursor.rowcount)
-            _cursor.close()
-            _conn.close()
+
+        if 0:
+            _conn = self.__dbPool.connection()
+            _cursor = _conn.cursor()
+            insert_sql, params = item.get_insert_sql()
+            sql = insert_sql % params
+
+            try:
+                _cursor.execute(sql)
+            except Exception as e:
+                _conn.rollback()  # 事务回滚
+                _conn.close()
+                print('事务处理失败', e)
+            else:
+                _conn.commit()  # 事务提交
+                print('事务处理成功', _cursor.rowcount)
+                _cursor.close()
+                _conn.close()
 
 
     def insertOrder(self,item):

@@ -119,3 +119,19 @@ class FESearchPlace(scrapy.Item):
     latitude = scrapy.Field()               #经度
     longitude = scrapy.Field()              #纬度
     platform_id = scrapy.Field()            #平台ID
+
+
+class TestItem(scrapy.Item):
+    a = scrapy.Field()
+    b = list()#{}
+
+    def get_insert_sql(self):
+        insert_sql = """insert into fe_order(name)
+                 value ('%d')"""
+        params = (self["a"])
+        return insert_sql, params
+
+    def get_insertChild_sql(self,):
+        insert_sql = """insert into fe_food(foodid,orderid)
+                 value ('%d','%d')"""
+        return insert_sql
